@@ -1,0 +1,428 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sistema de Control y Reportes Internos</title>
+    <style>
+        /* Estilos Base y Tipografía */
+        body {
+            font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+            background-color: #f8fafc;
+            color: #1e293b;
+            margin: 0;
+            padding: 20px;
+            display: flex;
+            justify-content: center;
+        }
+        .container {
+            width: 100%;
+            max-width: 650px;
+            background: #ffffff;
+            padding: 25px;
+            border-radius: 16px;
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.05);
+        }
+        h1, h2 {
+            text-align: center;
+            color: #0f172a;
+            margin-top: 0;
+        }
+
+        /* Diseño de Pestañas (Navegación) */
+        .tabs-nav {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 25px;
+            border-bottom: 2px solid #e2e8f0;
+            padding-bottom: 10px;
+        }
+        .tab-button {
+            flex: 1;
+            padding: 12px;
+            background: #f1f5f9;
+            border: none;
+            border-radius: 8px;
+            font-weight: bold;
+            color: #64748b;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+        .tab-button.active {
+            background: #3b82f6;
+            color: white;
+        }
+        .tab-content {
+            display: none;
+        }
+        .tab-content.active {
+            display: block;
+        }
+        
+        /* Panel de Métricas (Caja General) */
+        .dashboard {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 12px;
+            margin-bottom: 25px;
+        }
+        .card {
+            background: #f8fafc;
+            border: 1px solid #e2e8f0;
+            padding: 15px;
+            border-radius: 10px;
+            text-align: center;
+        }
+        .card-title {
+            font-size: 0.85rem;
+            text-transform: uppercase;
+            color: #64748b;
+            margin-bottom: 5px;
+            font-weight: bold;
+        }
+        .card-value {
+            font-size: 1.3rem;
+            font-weight: bold;
+            color: #0f172a;
+        }
+        .full-width { grid-column: span 2; }
+        
+        /* Semántica de Sobres */
+        .sobre-rojo { border-left: 5px solid #ef4444; }
+        .sobre-rojo .card-value { color: #b91c1c; }
+        .sobre-verde { border-left: 5px solid #10b981; }
+        .sobre-verde .card-value { color: #047857; }
+        
+        /* Estilo Destacado de Consumos (Foco Visual Máximo) */
+        .card-highlight {
+            background: #fffbeb;
+            border: 2px solid #f59e0b;
+            grid-column: span 2;
+            padding: 20px;
+            border-radius: 12px;
+        }
+        .card-highlight .card-title { color: #b45309; font-size: 0.95rem; }
+        .card-highlight .card-value { font-size: 2.2rem; color: #78350f; }
+
+        /* Estilos de Bloques de Reporte */
+        .report-section {
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+        }
+        .report-card {
+            background: #fffbeb;
+            border-left: 6px solid #d97706;
+            padding: 20px;
+            border-radius: 8px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.02);
+        }
+        .report-info h3 { margin: 0; color: #451a03; font-size: 1.1rem; }
+        .report-info p { margin: 5px 0 0 0; color: #b45309; font-size: 0.85rem; }
+        .report-total { font-size: 2rem; font-weight: bold; color: #78350f; }
+
+        /* Formularios y Botones */
+        .form-group { margin-bottom: 15px; }
+        label { display: block; margin-bottom: 5px; font-weight: 600; color: #334155; }
+        input, select {
+            width: 100%;
+            padding: 11px;
+            box-sizing: border-box;
+            border: 1px solid #cbd5e1;
+            border-radius: 8px;
+            font-size: 1rem;
+        }
+        .btn-primary {
+            width: 100%;
+            padding: 12px;
+            background-color: #3b82f6;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-size: 1rem;
+            font-weight: bold;
+            cursor: pointer;
+        }
+        .btn-primary:hover { background-color: #2563eb; }
+        
+        /* Tablas */
+        table { width: 100%; border-collapse: collapse; margin-top: 25px; }
+        th, td { padding: 12px; text-align: left; border-bottom: 1px solid #e2e8f0; }
+        th { background-color: #f1f5f9; color: #475569; }
+        .badge { padding: 3px 8px; border-radius: 4px; font-size: 0.75rem; font-weight: bold; }
+        .badge-consumo { background-color: #dbeafe; color: #1e40af; }
+        .badge-cerrado { background-color: #fef3c7; color: #92400e; }
+        .btn-clear { background-color: #94a3b8; margin-top: 20px; width: 100%; color: white; border: none; padding: 10px; border-radius: 8px; cursor: pointer; font-weight: bold;}
+        .btn-clear:hover { background-color: #64748b; }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <!-- Navegación por pestañas -->
+    <div class="tabs-nav">
+        <button class="tab-button active" onclick="cambiarPestaña('registro')">Caja Diaria</button>
+        <button class="tab-button" onclick="cambiarPestaña('reportes')">Reportes de Consumos</button>
+    </div>
+    
+    <!-- PESTAÑA 1: REGISTRO Y CAJA DIARIA -->
+    <div id="tab-registro" class="tab-content active">
+        <h1>Panel de Caja Activa</h1>
+        
+        <div class="dashboard">
+            <div class="card">
+                <div class="card-title">Venta del Día</div>
+                <div class="card-value">$<span id="ventaDia">0.00</span></div>
+            </div>
+            <div class="card">
+                <div class="card-title">Producto Cerrado</div>
+                <div class="card-value">$<span id="productoCerrado">0.00</span></div>
+            </div>
+            <div class="card full-width" style="background: #f1f5f9;">
+                <div class="card-title">Total (Venta + Cerrado)</div>
+                <div class="card-value">$<span id="totalCombinado">0.00</span></div>
+            </div>
+            <div class="card sobre-rojo">
+                <div class="card-title">Sobre Rojo (70%)</div>
+                <div class="card-value">$<span id="sobreRojo">0.00</span></div>
+            </div>
+            <div class="card sobre-verde">
+                <div class="card-title">Sobre Verde (30%)</div>
+                <div class="card-value">$<span id="sobreVerde">0.00</span></div>
+            </div>
+            <div class="card card-highlight">
+                <div class="card-title">★ CONSUMOS ACTUALES (Venta / 90) ★</div>
+                <div class="card-value"><span id="consumosMetrica">0.00</span></div>
+            </div>
+        </div>
+
+        <form id="formOperacion">
+            <div class="form-group">
+                <label for="cliente">Nombre o Detalle</label>
+                <input type="text" id="cliente" placeholder="Nombre del cliente" required>
+            </div>
+            <div class="form-group">
+                <label for="tipo">Tipo de Entrada</label>
+                <select id="tipo">
+                    <option value="consumo">Consumo Regular (Suma a Venta del Día)</option>
+                    <option value="cerrado">Producto Cerrado (Separado de Venta del Día)</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label for="monto">Monto ($)</label>
+                <input type="number" id="monto" min="0.01" step="any" placeholder="0.00" required>
+            </div>
+            <button type="submit" class="btn-primary">Guardar Registro</button>
+        </form>
+
+        <h2>Historial de Hoy</h2>
+        <table>
+            <thead>
+                <tr>
+                    <th>Detalle</th>
+                    <th>Tipo</th>
+                    <th>Monto</th>
+                </tr>
+            </thead>
+            <tbody id="historialLineas"></tbody>
+        </table>
+        <button class="btn-clear" id="btnReset">Limpiar Base de Datos Completa</button>
+    </div>
+
+    <!-- PESTAÑA 2: REPORTES HISTÓRICOS -->
+    <div id="tab-reportes" class="tab-content">
+        <h1>Histórico de Consumos</h1>
+        <p style="text-align: center; color: #64748b; margin-bottom: 25px;">Métricas exclusivas calculadas bajo la regla (Venta del Día / 90)</p>
+        
+        <div class="report-section">
+            <!-- Diario -->
+            <div class="report-card">
+                <div class="report-info">
+                    <h3>Consumos de Hoy</h3>
+                    <p>Filtrado por fecha actual</p>
+                </div>
+                <div class="report-total" id="repDiario">0.00</div>
+            </div>
+            
+            <!-- Semanal -->
+            <div class="report-card">
+                <div class="report-info">
+                    <h3>Consumos de la Semana</h3>
+                    <p>Últimos 7 días de operación</p>
+                </div>
+                <div class="report-total" id="repSemanal">0.00</div>
+            </div>
+            
+            <!-- Mensual -->
+            <div class="report-card">
+                <div class="report-info">
+                    <h3>Consumos del Mes</h3>
+                    <p>Últimos 30 días de operación</p>
+                </div>
+                <div class="report-total" id="repMensual">0.00</div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    let registros = JSON.parse(localStorage.getItem('caja_operativa')) || [];
+
+    // Elementos del DOM
+    const formOperacion = document.getElementById('formOperacion');
+    const clienteInput = document.getElementById('cliente');
+    const tipoSelect = document.getElementById('tipo');
+    const montoInput = document.getElementById('monto');
+    const historialLineas = document.getElementById('historialLineas');
+
+    // Elementos del Dashboard
+    const txtVentaDia = document.getElementById('ventaDia');
+    const txtProductoCerrado = document.getElementById('productoCerrado');
+    const txtTotalCombinado = document.getElementById('totalCombinado');
+    const txtSobreRojo = document.getElementById('sobreRojo');
+    const txtSobreVerde = document.getElementById('sobreVerde');
+    const txtConsumosMetrica = document.getElementById('consumosMetrica');
+    const btnReset = document.getElementById('btnReset');
+
+    // Elementos de Reportes
+    const txtRepDiario = document.getElementById('repDiario');
+    const txtRepSemanal = document.getElementById('repSemanal');
+    const txtRepMensual = document.getElementById('repMensual');
+
+    // Control de navegación de pestañas
+    function cambiarPestaña(pestaña) {
+        document.querySelectorAll('.tab-content').forEach(tc => tc.classList.remove('active'));
+        document.querySelectorAll('.tab-button').forEach(tb => tb.classList.remove('active'));
+        
+        document.getElementById(`tab-${pestaña}`).classList.add('active');
+        event.currentTarget.classList.add('active');
+        
+        if(pestaña === 'reportes') {
+            generarReportes();
+        }
+    }
+
+    // Calcula finanzas de la caja del día (hoy)
+    function calcularFinanzasDiarias() {
+        let ventaDiaAcumulado = 0;
+        let productoCerradoAcumulado = 0;
+        
+        const hoyStr = new Date().toDateString();
+
+        registros.forEach(reg => {
+            // Evaluamos solo los del día de hoy para la pantalla principal
+            if (new Date(reg.fecha).toDateString() === hoyStr) {
+                if (reg.tipo === 'consumo') {
+                    ventaDiaAcumulado += reg.monto;
+                } else if (reg.tipo === 'cerrado') {
+                    productoCerradoAcumulado += reg.monto;
+                }
+            }
+        });
+
+        const combinado = ventaDiaAcumulado + productoCerradoAcumulado;
+        
+        txtVentaDia.textContent = ventaDiaAcumulado.toFixed(2);
+        txtProductoCerrado.textContent = productoCerradoAcumulado.toFixed(2);
+        txtTotalCombinado.textContent = combinado.toFixed(2);
+        txtSobreRojo.textContent = (combinado * 0.70).toFixed(2);
+        txtSobreVerde.textContent = (combinado * 0.30).toFixed(2);
+        txtConsumosMetrica.textContent = (ventaDiaAcumulado / 90).toFixed(2);
+    }
+
+    // Genera la lógica temporal de reportes (Pestaña 2)
+    function generarReportes() {
+        const ahora = new Date();
+        
+        let ventaHoy = 0;
+        let ventaSemana = 0;
+        let ventaMes = 0;
+
+        const unDiaMs = 24 * 60 * 60 * 1000;
+
+        registros.forEach(reg => {
+            if (reg.tipo === 'consumo') {
+                const fechaReg = new Date(reg.fecha);
+                const diferenciaTiempo = ahora - fechaReg;
+
+                // Condición Diario
+                if (fechaReg.toDateString() === ahora.toDateString()) {
+                    ventaHoy += reg.monto;
+                }
+                // Condición Semanal (Menor o igual a 7 días atrás)
+                if (diferenciaTiempo <= unDiaMs * 7) {
+                    ventaSemana += reg.monto;
+                }
+                // Condición Mensual (Menor o igual a 30 días atrás)
+                if (diferenciaTiempo <= unDiaMs * 30) {
+                    ventaMes += reg.monto;
+                }
+            }
+        });
+
+        txtRepDiario.textContent = (ventaHoy / 90).toFixed(2);
+        txtRepSemanal.textContent = (ventaSemana / 90).toFixed(2);
+        txtRepMensual.textContent = (ventaMes / 90).toFixed(2);
+    }
+
+    function renderizarTablaHoy() {
+        historialLineas.innerHTML = '';
+        const hoyStr = new Date().toDateString();
+        
+        registros.forEach(reg => {
+            if (new Date(reg.fecha).toDateString() === hoyStr) {
+                const tr = document.createElement('tr');
+                const claseBadge = reg.tipo === 'consumo' ? 'badge-consumo' : 'badge-cerrado';
+                const textoTipo = reg.tipo === 'consumo' ? 'Consumo' : 'P. Cerrado';
+
+                tr.innerHTML = `
+                    <td>${reg.cliente}</td>
+                    <td><span class="badge ${claseBadge}">${textoTipo}</span></td>
+                    <td>$${reg.monto.toFixed(2)}</td>
+                `;
+                historialLineas.appendChild(tr);
+            }
+        });
+    }
+
+    function actualizarSistema() {
+        calcularFinanzasDiarias();
+        renderizarTablaHoy();
+    }
+
+    formOperacion.addEventListener('submit', function(e) {
+        e.preventDefault();
+
+        const nuevoRegistro = {
+            cliente: clienteInput.value.trim(),
+            tipo: tipoSelect.value,
+            monto: parseFloat(montoInput.value),
+            fecha: new Date().toISOString() // Estampa de tiempo exacta
+        };
+
+        registros.push(nuevoRegistro);
+        localStorage.setItem('caja_operativa', JSON.stringify(registros));
+        
+        actualizarSistema();
+        formOperacion.reset();
+        clienteInput.focus();
+    });
+
+    btnReset.addEventListener('click', function() {
+        if (confirm('Atención: Esto eliminará de forma PERMANENTE todo el historial del almacenamiento local.')) {
+            registros = [];
+            localStorage.removeItem('caja_operativa');
+            actualizarSistema();
+            if(document.getElementById('tab-reportes').classList.contains('active')) {
+                generarReportes();
+            }
+        }
+    });
+
+    actualizarSistema();
+</script>
+</body>
+</html>
